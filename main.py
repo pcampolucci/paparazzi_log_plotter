@@ -12,6 +12,7 @@ from termcolor import colored
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import math as m
 
 
 class Converter:
@@ -134,17 +135,28 @@ class Converter:
         filename = self.conv_library[file_choice] + ".csv"
 
         dataframe = pd.read_csv(f"{self.path}/logs_converted/{filename}")
+        diff_dataframe = dataframe.diff()
         len_dataframe = len(dataframe.index)
         start = int(start*len_dataframe)
         end = int(end*len_dataframe)
 
+        # build derived values
+        dataframe["velocity_x"] = dataframe["ground_distance"] * np.tan(np.radians(dataframe["flow_x"]))
+        dataframe["velocity_y"] = dataframe["ground_distance"] * np.tan(np.radians(dataframe["flow_y"]))
+
         print(f"The file contains data on:\n{list(dataframe.columns)[1:]}\n ... and contains {len(dataframe.index)} samples")
 
-        sns.set_style('white')
+        sns.set_style('whitegrid')
 
         plt.figure(figsize=[10, 5])
-        plt.title(f"LOG: {filename[:-4]}.data")
-        sns.lineplot(x = dataframe['time_sec'][start:end], y = dataframe['flow_x'][start:end])
+        plt.title(f"LOG: {filename[:-4]}.data - flow in deg/sec")
+        # sns.lineplot(x=dataframe['time_sec'][start:end], y=dataframe['flow_x'][start:end], label="Motion X")
+        # sns.lineplot(x=dataframe['time_sec'][start:end], y=dataframe['flow_y'][start:end], label="Motion Y")
+        # sns.lineplot(x=dataframe['time_sec'][start:end], y=dataframe['ground_distance'][start:end] * 100, label="AGL [cm]")
+        # sns.lineplot(x=dataframe['time_sec'][start:end], y=dataframe['velocity_x'][start:end] * 100, label="Velocity X [mm/sec]")
+        # sns.lineplot(x=dataframe['time_sec'][start:end], y=dataframe['velocity_y'][start:end] * 100, label="Velocity Y [mm/sec]")
+
+        sns.lineplot(x=dataframe['time_sec'][start:end], y=diff_dataframe['time_sec'][start:end]*-10**(-9), label="Delta time [sec]")
 
         plt.show()
 
@@ -153,6 +165,6 @@ class Converter:
 
 conv = Converter()
 # conv.convert()
-conv.plot(0.2, 0.3)
+conv.plot(0.05, 0.3)
 
 
